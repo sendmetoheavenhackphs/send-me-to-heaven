@@ -1,0 +1,89 @@
+
+/* COLOR PALETTE: */
+
+/*
+
+White: #FFFFFF
+Gray:  #F2F2F2
+Green: #7CDE7C
+
+*/
+
+title {
+  color: #FFFFFF;
+  letter-spacing: 7px;
+  text-align: center;
+  font-size: 40px;
+}
+
+h1 {
+  letter-spacing: 2px;
+  text-align: center;
+  font-size: 30px;
+  color: #FFFFFF;
+
+}
+h2 {
+  letter-spacing: 2px;
+  text-align: center;
+  font-size: 30px;
+  color: #FFFFFF;
+
+}
+
+
+p {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  color: #FFFFFF;
+
+}
+
+li {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  color: #FFFFFF;
+
+}
+
+
+body {
+  padding-top:1%;
+
+}
+ .content{
+    background-color: #0D1117;
+
+  margin: auto;
+  min-height: 700px;
+  padding: 50px;
+  width: 80%;
+  
+  
+}
+iframe{
+  padding-top:1%;}
+header {
+  padding-bottom:1%;
+  background-color: #FFDC00;
+  width: 80%;
+  /* don't forget about hexcolors*/
+}
+/* From W3Schools */
+
+/* Create two equal columns that floats next to each other */
+.column {
+  float: center;
+  width: 50%;
+  padding: 10px;
+  height: 50%; /* Should be removed. Only for demonstration */
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+*{  border-radius: 25px;}
