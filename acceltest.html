@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Phone Sensor Diagnostic</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 18px;
+      max-width: 900px;
+      margin-inline: auto;
+      line-height: 1.35;
+    }
+    h1 { margin-bottom: .25rem; }
+    h2 { margin-top: 1.4rem; font-size: 1.15rem; }
+    .note { opacity: .8; margin-top: 0; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0;
+    }
+    button {
+      font: inherit;
+      padding: 11px 14px;
+      border-radius: 9px;
+      border: 1px solid currentColor;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    dl {
+      display: grid;
+      grid-template-columns: minmax(130px, 1fr) minmax(90px, auto);
+      gap: 6px 12px;
+      margin: 0;
+    }
+    dt { opacity: .75; }
+    dd {
+      margin: 0;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+    .wide dd { text-align: left; }
+    .ok { color: #16803a; }
+    .bad { color: #b42318; }
+    .warn { color: #9a6700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    #message {
+      min-height: 1.5em;
+      font-weight: 600;
+      margin: 10px 0;
+    }
+    .small { font-size: .9rem; opacity: .8; }
+  </style>
+</head>
+<body>
+  <h1>Phone Sensor Diagnostic</h1>
+  <p class="note">
+    Tests browser access to motion sensors. No data leaves this page.
+    For iPhone/iPad, tap <strong>Enable sensors</strong> to request permission.
+  </p>
+
+  <div class="controls">
+    <button id="enableBtn">Enable sensors</button>
+    <button id="startBtn" disabled>Start recording</button>
+    <button id="stopBtn" disabled>Stop recording</button>
+    <button id="exportBtn" disabled>Export CSV</button>
+    <button id="clearBtn">Clear data</button>
+  </div>
+
+  <div id="message"></div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Environment</h2>
+      <dl class="wide">
+        <dt>Secure context</dt><dd id="secure">—</dd>
+        <dt>DeviceMotion API</dt><dd id="api">—</dd>
+        <dt>Permission</dt><dd id="permission">not requested</dd>
+        <dt>User agent</dt><dd id="ua" class="small">—</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Timing</h2>
+      <dl>
+        <dt>Event count</dt><dd id="eventCount">0</dd>
+        <dt>Elapsed time</dt><dd id="elapsed">—</dd>
+        <dt>Browser interval</dt><dd id="browserInterval">—</dd>
+        <dt>Last measured Δt</dt><dd id="lastDt">—</dd>
+        <dt>Mean measured Δt</dt><dd id="meanDt">—</dd>
+        <dt>Measured rate</dt><dd id="rate">—</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Acceleration (gravity removed)</h2>
+      <dl>
+        <dt>a<sub>x</sub></dt><dd id="ax">—</dd>
+        <dt>a<sub>y</sub></dt><dd id="ay">—</dd>
+        <dt>a<sub>z</sub></dt><dd id="az">—</dd>
+        <dt>|a|</dt><dd id="amag">—</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Acceleration including gravity</h2>
+      <dl>
+        <dt>a<sub>x,g</sub></dt><dd id="agx">—</dd>
+        <dt>a<sub>y,g</sub></dt><dd id="agy">—</dd>
+        <dt>a<sub>z,g</sub></dt><dd id="agz">—</dd>
+        <dt>|a<sub>g</sub>|</dt><dd id="agmag">—</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Rotation rate</h2>
+      <dl>
+        <dt>α</dt><dd id="ra">—</dd>
+        <dt>β</dt><dd id="rb">—</dd>
+        <dt>γ</dt><dd id="rg">—</dd>
+      </dl>
+      <p class="small">Units: degrees per second, as supplied by DeviceMotionEvent.</p>
+    </section>
+
+    <section class="card">
+      <h2>Stationary sanity check</h2>
+      <p id="stationary">Waiting for sensor data…</p>
+      <p class="small">
+        When the phone is stationary, gravity-included acceleration should have
+        magnitude near 9.8 m/s². Gravity-removed acceleration should ideally be near 0.
+      </p>
+    </section>
+  </div>
+
+  <p class="small">
+    Diagnostic only. Browser implementations differ, so null/missing channels are
+    intentionally preserved rather than replaced with calculated values.
+  </p>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  const enableBtn = $("enableBtn");
+  const startBtn = $("startBtn");
+  const stopBtn = $("stopBtn");
+  const exportBtn = $("exportBtn");
+  const clearBtn = $("clearBtn");
+  const message = $("message");
+
+  $("secure").textContent = window.isSecureContext ? "yes" : "no";
+  $("secure").className = window.isSecureContext ? "ok" : "bad";
+  $("api").textContent = ("DeviceMotionEvent" in window) ? "available" : "unavailable";
+  $("api").className = ("DeviceMotionEvent" in window) ? "ok" : "bad";
+  $("ua").textContent = navigator.userAgent;
+
+  let sensorEnabled = false;
+  let recording = false;
+  let rows = [];
+  let totalEvents = 0;
+  let recordingStart = null;
+  let lastEventPerf = null;
+  let dtWindow = [];
+
+  function n(v, digits = 4) {
+    return (typeof v === "number" && Number.isFinite(v)) ? v.toFixed(digits) : "—";
+  }
+
+  function csvVal(v) {
+    return (typeof v === "number" && Number.isFinite(v)) ? String(v) : "";
+  }
+
+  function mag(obj) {
+    if (!obj) return null;
+    const vals = [obj.x, obj.y, obj.z];
+    if (!vals.every(v => typeof v === "number" && Number.isFinite(v))) return null;
+    return Math.hypot(...vals);
+  }
+
+  function setXYZ(prefix, obj) {
+    $(prefix + "x").textContent = n(obj?.x);
+    $(prefix + "y").textContent = n(obj?.y);
+    $(prefix + "z").textContent = n(obj?.z);
+  }
+
+  function updateStationary(acc, accG, rot) {
+    const mg = mag(accG);
+    const ma = mag(acc);
+    const rotVals = rot ? [rot.alpha, rot.beta, rot.gamma] : [];
+    const mr = rotVals.length && rotVals.every(v => typeof v === "number" && Number.isFinite(v))
+      ? Math.hypot(...rotVals) : null;
+
+    if (mg == null) {
+      $("stationary").textContent = "Gravity-included acceleration is unavailable on this browser/device.";
+      $("stationary").className = "warn";
+      return;
+    }
+
+    const gravityOK = Math.abs(mg - 9.81) < 1.5;
+    const linearOK = ma == null || ma < 1.0;
+    const rotationOK = mr == null || mr < 8;
+
+    if (gravityOK && linearOK && rotationOK) {
+      $("stationary").textContent = "Readings are consistent with a stationary phone.";
+      $("stationary").className = "ok";
+    } else {
+      $("stationary").textContent = "Phone appears to be moving, or sensor conventions/noise differ from the expected stationary values.";
+      $("stationary").className = "warn";
+    }
+  }
+
+  function onMotion(event) {
+    totalEvents++;
+    $("eventCount").textContent = totalEvents;
+
+    const nowPerf = performance.now();
+    const dt = lastEventPerf == null ? null : nowPerf - lastEventPerf;
+    lastEventPerf = nowPerf;
+
+    if (dt != null && dt > 0 && dt < 1000) {
+      dtWindow.push(dt);
+      if (dtWindow.length > 120) dtWindow.shift();
+    }
+
+    const meanDt = dtWindow.length
+      ? dtWindow.reduce((a,b) => a+b, 0) / dtWindow.length
+      : null;
+    const hz = meanDt ? 1000 / meanDt : null;
+
+    $("browserInterval").textContent =
+      (typeof event.interval === "number") ? `${n(event.interval, 2)} ms` : "—";
+    $("lastDt").textContent = dt == null ? "—" : `${n(dt, 2)} ms`;
+    $("meanDt").textContent = meanDt == null ? "—" : `${n(meanDt, 2)} ms`;
+    $("rate").textContent = hz == null ? "—" : `${n(hz, 1)} Hz`;
+
+    setXYZ("a", event.acceleration);
+    $("amag").textContent = n(mag(event.acceleration));
+
+    setXYZ("ag", event.accelerationIncludingGravity);
+    $("agmag").textContent = n(mag(event.accelerationIncludingGravity));
+
+    $("ra").textContent = n(event.rotationRate?.alpha);
+    $("rb").textContent = n(event.rotationRate?.beta);
+    $("rg").textContent = n(event.rotationRate?.gamma);
+
+    updateStationary(event.acceleration, event.accelerationIncludingGravity, event.rotationRate);
+
+    if (!recording) return;
+
+    const elapsed = nowPerf - recordingStart;
+    $("elapsed").textContent = `${n(elapsed / 1000, 3)} s`;
+
+    rows.push({
+      sample: rows.length,
+      timestamp_ms: elapsed,
+      dt_ms: dt,
+      ax: event.acceleration?.x,
+      ay: event.acceleration?.y,
+      az: event.acceleration?.z,
+      ax_g: event.accelerationIncludingGravity?.x,
+      ay_g: event.accelerationIncludingGravity?.y,
+      az_g: event.accelerationIncludingGravity?.z,
+      rot_alpha: event.rotationRate?.alpha,
+      rot_beta: event.rotationRate?.beta,
+      rot_gamma: event.rotationRate?.gamma,
+      browser_interval_ms: event.interval
+    });
+
+    exportBtn.disabled = rows.length === 0;
+  }
+
+  async function enableSensors() {
+    message.textContent = "";
+
+    if (!window.isSecureContext) {
+      message.textContent = "This page is not in a secure context. Host it over HTTPS before testing on a phone.";
+      message.className = "bad";
+      return;
+    }
+
+    if (!("DeviceMotionEvent" in window)) {
+      message.textContent = "DeviceMotionEvent is not supported by this browser.";
+      message.className = "bad";
+      return;
+    }
+
+    try {
+      if (typeof DeviceMotionEvent.requestPermission === "function") {
+        const result = await DeviceMotionEvent.requestPermission();
+        $("permission").textContent = result;
+        $("permission").className = result === "granted" ? "ok" : "bad";
+
+        if (result !== "granted") {
+          message.textContent = "Motion sensor permission was not granted.";
+          message.className = "bad";
+          return;
+        }
+      } else {
+        $("permission").textContent = "not required by this browser";
+        $("permission").className = "ok";
+      }
+
+      if (!sensorEnabled) {
+        window.addEventListener("devicemotion", onMotion, { passive: true });
+        sensorEnabled = true;
+      }
+
+      startBtn.disabled = false;
+      enableBtn.disabled = true;
+      message.textContent = "Sensors enabled. Move or rotate the phone and check the live values.";
+      message.className = "ok";
+    } catch (err) {
+      $("permission").textContent = "error";
+      $("permission").className = "bad";
+      message.textContent = `Could not enable sensors: ${err?.message || err}`;
+      message.className = "bad";
+    }
+  }
+
+  function startRecording() {
+    rows = [];
+    recording = true;
+    recordingStart = performance.now();
+    lastEventPerf = null;
+    dtWindow = [];
+    $("elapsed").textContent = "0.000 s";
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    exportBtn.disabled = true;
+    message.textContent = "Recording…";
+    message.className = "";
+  }
+
+  function stopRecording() {
+    recording = false;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    exportBtn.disabled = rows.length === 0;
+    message.textContent = `Recording stopped. ${rows.length} samples captured.`;
+    message.className = "ok";
+  }
+
+  function clearData() {
+    rows = [];
+    totalEvents = 0;
+    dtWindow = [];
+    recording = false;
+    recordingStart = null;
+    lastEventPerf = null;
+    $("eventCount").textContent = "0";
+    $("elapsed").textContent = "—";
+    $("lastDt").textContent = "—";
+    $("meanDt").textContent = "—";
+    $("rate").textContent = "—";
+    exportBtn.disabled = true;
+    stopBtn.disabled = true;
+    if (sensorEnabled) startBtn.disabled = false;
+    message.textContent = "Recorded data cleared.";
+    message.className = "";
+  }
+
+  function exportCSV() {
+    if (!rows.length) return;
+
+    const headers = [
+      "sample","timestamp_ms","dt_ms",
+      "ax","ay","az",
+      "ax_g","ay_g","az_g",
+      "rot_alpha","rot_beta","rot_gamma",
+      "browser_interval_ms"
+    ];
+
+    const lines = [headers.join(",")];
+    for (const r of rows) {
+      lines.push(headers.map(h => csvVal(r[h])).join(","));
+    }
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    a.href = url;
+    a.download = `sensor-diagnostic-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  enableBtn.addEventListener("click", enableSensors);
+  startBtn.addEventListener("click", startRecording);
+  stopBtn.addEventListener("click", stopRecording);
+  exportBtn.addEventListener("click", exportCSV);
+  clearBtn.addEventListener("click", clearData);
+
+  if (!window.isSecureContext) {
+    message.textContent = "For phone sensor access, serve this page over HTTPS.";
+    message.className = "warn";
+  }
+})();
+</script>
+</body>
+</html>
