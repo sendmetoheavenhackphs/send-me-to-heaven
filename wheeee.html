@@ -1,0 +1,36 @@
+
+      <script type="text/javascript">
+let velocityY = 0;
+let posY = 0; 
+let lastTime = 0;
+
+const ay = event.acceleration?.y;
+
+if (ay != null && Number.isFinite(ay)) {
+  const now = performance.now();
+  
+  if (lastTimestamp != null) {
+    // Delta t in seconds
+    const dt = (now - lastTimestamp) / 1000;
+    
+    // Ignore unusually large gaps (e.g., tab backgrounded)
+    if (dt > 0 && dt < 0.2) {
+      // Basic threshold filter to ignore minor sensor noise (deadband)
+      const cleanAy = Math.abs(ay) < 0.05 ? 0 : ay;
+
+      // 1. Integrate acceleration to velocity (v = v0 + a*dt)
+      velocityY += cleanAy * dt;
+      // 2. Integrate velocity to position (s = s0 + v*dt + 0.5*a*dt^2)
+      posY += velocityY * dt + 0.5 * cleanAy * dt * (dt);
+
+      // Display live Y distance on screen
+      $("yDistance").textContent = `${(posY * 100).toFixed(1)} cm`;
+    }
+  }
+  lastTimestamp = now;
+}</script>
+
+      the value for number is:
+      <script type="text/javascript">
+        document.write(posY)
+      </script>
