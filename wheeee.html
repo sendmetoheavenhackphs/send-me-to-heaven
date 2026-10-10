@@ -48,6 +48,17 @@
 </ul>
 
 <h4>Gyroscope</h4>
+
+
+<h4 style="margin-top:0.75rem;">Time in the Air (Hang Time)</h4>
+<ul>
+  <li>Status: <span id="AirTime_status">Waiting...</span></li>
+  <li>Current: <span id="AirTime_current">0.00</span><span> s</span></li>
+  <li>Last: <span id="AirTime_last">0.00</span><span> s</span></li>
+  <li>Max: <span id="AirTime_max">0.00</span><span> s</span></li>
+</ul>
+
+
 <ul>
   <li>X-axis: <span id="Gyroscope_x">0</span><span>&deg;/s</span></li>
   <li>Y-axis: <span id="Gyroscope_y">0</span><span>&deg;/s</span></li>
@@ -77,7 +88,12 @@ function updateFieldIfNotNull(fieldName, value, precision=10){
     document.getElementById(fieldName).innerHTML = value.toFixed(precision);
 }
 
-function handleMotion(event) {
+let inAir = false;
+let airStartTime = null;
+let lastAirTime = 0;
+let maxAirTime = 0;
+
+  function handleMotion(event) {
   updateFieldIfNotNull('Accelerometer_gx', event.accelerationIncludingGravity.x);
   updateFieldIfNotNull('Accelerometer_gy', event.accelerationIncludingGravity.y);
   updateFieldIfNotNull('Accelerometer_gz', event.accelerationIncludingGravity.z);
@@ -91,6 +107,46 @@ function handleMotion(event) {
   updateFieldIfNotNull('Gyroscope_z', event.rotationRate.alpha);
   updateFieldIfNotNull('Gyroscope_x', event.rotationRate.beta);
   updateFieldIfNotNull('Gyroscope_y', event.rotationRate.gamma);
+  
+
+  let gx = event.accelerationIncludingGravity.x;
+  let gy = event.accelerationIncludingGravity.y;
+  let gz = event.accelerationIncludingGravity.z;
+
+  if (gx !== null && gy !== null && gz !== null) {
+    
+    let totalAcc = Math.sqrt(gx * gx + gy * gy + gz * gz);
+    let freeFallThreshold = 2.5;
+    let now = performance.now();
+
+    if (!inAir && totalAcc < freeFallThreshold) {
+      inAir = true;
+      airStartTime = now;
+      document.getElementById('AirTime_status').innerHTML = "AHHHHHHHHH";
+    } else if (inAir && totalAcc >= freeFallThreshold) {
+
+      inAir = false;
+      let duration = (now - airStartTime) / 1000; // Convert ms to seconds
+      if (duration > 0.05 && duration < 3.0) {
+        lastAirTime = duration;
+        if (duration > maxAirTime) {
+          maxAirTime = duration;
+        }
+        document.getElementById('AirTime_last').innerHTML = lastAirTime.toFixed(2);
+        document.getElementById('AirTime_max').innerHTML = maxAirTime.toFixed(2);
+      }
+      document.getElementById('AirTime_status').innerHTML = "Landed";
+    }
+
+    if (inAir) {
+      let currentDuration = (now - airStartTime) / 1000;
+      document.getElementById('AirTime_current').innerHTML = currentDuration.toFixed(2);
+    } else {
+      document.getElementById('AirTime_current').innerHTML = "0.00";
+    }
+  }
+  // -------------------------------------------
+
   incrementEventCount();
 }
 
@@ -123,6 +179,8 @@ demo_button.onclick = function(e) {
     is_running = true;
   }
 };
+
+
 
 /*
 Light and proximity are not supported anymore by mainstream browsers.
