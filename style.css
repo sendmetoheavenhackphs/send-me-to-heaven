@@ -25,6 +25,8 @@ h1 {
 p {
   font-family: Georgia, serif;
   font-size: 20px;
+  color: #FFFFFF;
+
 }
 
 body {
@@ -45,7 +47,7 @@ iframe{
   padding-top:1%;}
 header {
   padding-bottom:1%;
-  background-color: #7CDE7C;
+  background-color: #FFDC00;
   width: 80%;
   /* don't forget about hexcolors*/
 }
