@@ -20,7 +20,17 @@ h1 {
   letter-spacing: 2px;
   text-align: center;
   font-size: 30px;
+  color: #FFFFFF;
+
 }
+h2 {
+  letter-spacing: 2px;
+  text-align: center;
+  font-size: 30px;
+  color: #FFFFFF;
+
+}
+
 
 p {
   font-family: Georgia, serif;
@@ -31,10 +41,11 @@ p {
 
 body {
   padding-top:1%;
-    background-color: #0D1117;
+    background-color: #000000;
 
 }
  .content{
+    background-color: #0D1117;
 
   margin: auto;
   min-height: 700px;
