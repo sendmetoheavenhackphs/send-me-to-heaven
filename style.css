@@ -29,9 +29,10 @@ p {
 
 body {
   padding-top:1%;
+    background-color: #0D1117;
+
 }
  .content{
-  background-color: #F2F2F2;
 
   margin: auto;
   min-height: 700px;
