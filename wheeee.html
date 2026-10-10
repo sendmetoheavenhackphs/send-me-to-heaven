@@ -217,11 +217,12 @@ function func2() {
         list.removeChild(list.children[0]);
             list.removeChild(list.children[0]);
   
-  
-  data.sort((x, y) => y - x);
+          }
+
+
+    data.sort((x, y) => y - x);
 
    data2=data.slice(0, 3);
-        const list = document.getElementById("myList");
 
         data2.forEach((item) => {
             const li = document.createElement("li");
@@ -230,12 +231,6 @@ function func2() {
 
             
         });
-  
-  
-          }
-
-
-  
 
 }
 </script>
