@@ -1,13 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Send Me To Heaven: HackPHS Edition!</title>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>To The Skies!</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">    
+    <style>
+      #demo-div {color: white;}
+      #demo-div span, #demo-div #num-observed-events {color: white;}
+      h1 {margin-top: 0.5rem;margin-bottom: 0.66rem;}
+      h4 {margin-top: 0.66rem; font-size:3rem;margin-bottom: 0.66rem;}
+      #demo-div li {line-height: 21px;}
+      #demo-div ul {margin-bottom: 0.66rem;}
+      h3 { font-size: 0; }
+    </style>
 </head>
-  
 <body>
 
     <center>
@@ -16,14 +24,226 @@
     </h1>
 <a href="index.html" class="btn btn-outline-dark"> Home Page </a>
 <a href="timetofly.html" class="btn btn-outline-dark"> Send Me!</a>
-
 </center>
-</nav></header>                     
+</nav></header>    <br>
+                 
    <div class="content"><nav><center>
     <center>
 
+<main role="main" class="container">
 
-        <center><iframe src="wheeee.html" height="1700" width="100%" frameBorder="0" scrolling="yes" onload="this.style.display='block';"></center>
+<div class="p-3 mb-2 " id="demo-div">
+<a id="start_demo" class="btn btn-lg btn-success py-1" href="#" role="button">Give Permissions</a>
+<h3 style="margin-top:1rem;">Num. of datapoints: <span class="badge badge-warning" id="num-observed-events">0</span></h3>
+
+
+  <ul>
+  <h3>X-axis (&beta;): <span id="Orientation_b">0</span><span>&deg;</span></h3>
+  <h3>Y-axis (&gamma;): <span id="Orientation_g">0</span><span>&deg;</span></h3>
+  <h3>Z-axis (&alpha;): <span id="Orientation_a">0</span><span>&deg;</span></h3>
+</ul>
+
+<ul>
+  <h3>X-axis: <span id="Accelerometer_x">0</span><span> m/s<sup>2</sup></span></h3>
+  <h3>Y-axis: <span id="Accelerometer_y">0</span><span> m/s<sup>2</sup></span></h3>
+  <h3>Z-axis: <span id="Accelerometer_z">0</span><span> m/s<sup>2</sup></span></h3>
+  <h3>Data Interval: <span id="Accelerometer_i">0</span><span> ms</span></h3>
+</ul>
+
+
+<ul>
+  <h3>X-axis: <span id="Accelerometer_gx">0</span><span> m/s<sup>2</sup></span></h3>
+  <h3>Y-axis: <span id="Accelerometer_gy">0</span><span> m/s<sup>2</sup></span></h3>
+  <h3>Z-axis: <span id="Accelerometer_gz">0</span><span> m/s<sup>2</sup></span></h3>
+</ul>
+
+
+
+<h4 style="margin-top:0.75rem;">Time in the Air (Hang Time)</h4>
+<ul>
+  Status: <span id="AirTime_status">Waiting...</span></h3>
+  Current: <span id="AirTime_current">0.00</span><span> s</span></h3>
+  <h4>Leaderboard:</h4>
+
+  Last: <span id="AirTime_last">0.00</span><span> s</span></h3>
+  <h3>Max: <span id="AirTime_max">0.00</span><span> s</span></h3>
+</ul>
+
+    <ul id="myList"></ul>
+
+<ul>
+  <h3>X-axis: <span id="Gyroscope_x">0</span><span>&deg;/s</span></h3>
+  <h3>Y-axis: <span id="Gyroscope_y">0</span><span>&deg;/s</span></h3>
+  <h3>Z-axis: <span id="Gyroscope_z">0</span><span>&deg;/s</span></h3>
+</ul>
+
+</div>
+</main>
+
+<script>
+
+function handleOrientation(event) {
+  updateFieldIfNotNull('Orientation_a', event.alpha);
+  updateFieldIfNotNull('Orientation_b', event.beta);
+  updateFieldIfNotNull('Orientation_g', event.gamma);
+  incrementEventCount();
+}
+
+function incrementEventCount(){
+  let counterElement = document.getElementById("num-observed-events")
+  let eventCount = parseInt(counterElement.innerHTML)
+  counterElement.innerHTML = eventCount + 1;
+}
+
+function updateFieldIfNotNull(fieldName, value, precision=10){
+  if (value != null)
+    document.getElementById(fieldName).innerHTML = value.toFixed(precision);
+}
+
+let inAir = false;
+let airStartTime = null;
+let lastAirTime = 0;
+let maxAirTime = 0;
+
+  function handleMotion(event) {
+  updateFieldIfNotNull('Accelerometer_gx', event.accelerationIncludingGravity.x);
+  updateFieldIfNotNull('Accelerometer_gy', event.accelerationIncludingGravity.y);
+  updateFieldIfNotNull('Accelerometer_gz', event.accelerationIncludingGravity.z);
+
+  updateFieldIfNotNull('Accelerometer_x', event.acceleration.x);
+  updateFieldIfNotNull('Accelerometer_y', event.acceleration.y);
+  updateFieldIfNotNull('Accelerometer_z', event.acceleration.z);
+
+  updateFieldIfNotNull('Accelerometer_i', event.interval, 2);
+
+  updateFieldIfNotNull('Gyroscope_z', event.rotationRate.alpha);
+  updateFieldIfNotNull('Gyroscope_x', event.rotationRate.beta);
+  updateFieldIfNotNull('Gyroscope_y', event.rotationRate.gamma);
+  
+
+  let gx = event.accelerationIncludingGravity.x;
+  let gy = event.accelerationIncludingGravity.y;
+  let gz = event.accelerationIncludingGravity.z;
+
+  if (gx !== null && gy !== null && gz !== null) {
+    
+    let totalAcc = Math.sqrt(gx * gx + gy * gy + gz * gz);
+    let freeFallThreshold = 2.5;
+    let now = performance.now();
+
+    if (!inAir && totalAcc < freeFallThreshold) {
+      inAir = true;
+      airStartTime = now;
+      document.getElementById('AirTime_status').innerHTML = "AHHHHHHHHH";
+    } else if (inAir && totalAcc >= freeFallThreshold) {
+
+      inAir = false;
+      let duration = (now - airStartTime) / 1000; // Convert ms to seconds
+      if (duration > 0.05 && duration < 3.0) {
+        lastAirTime = duration;
+        func2();
+        if (duration > maxAirTime) {
+          maxAirTime = duration;
+        }
+        document.getElementById('AirTime_last').innerHTML = lastAirTime.toFixed(2);
+        document.getElementById('AirTime_max').innerHTML = maxAirTime.toFixed(2);
+      }
+      document.getElementById('AirTime_status').innerHTML = "Landed";
+    }
+
+    if (inAir) {
+      let currentDuration = (now - airStartTime) / 1000;
+      document.getElementById('AirTime_current').innerHTML = currentDuration.toFixed(2);
+    } else {
+      document.getElementById('AirTime_current').innerHTML = "0.00";
+    }
+  }
+  // -------------------------------------------
+
+  incrementEventCount();
+}
+
+let is_running = false;
+let demo_button = document.getElementById("start_demo");
+demo_button.onclick = function(e) {
+  e.preventDefault();
+  
+  // Request permission for iOS 13+ devices
+  if (
+    DeviceMotionEvent &&
+    typeof DeviceMotionEvent.requestPermission === "function"
+  ) {
+    DeviceMotionEvent.requestPermission();
+  }
+  
+  if (is_running){
+    window.removeEventListener("devicemotion", handleMotion);
+    window.removeEventListener("deviceorientation", handleOrientation);
+    demo_button.innerHTML = "Start";
+    demo_button.classList.add('btn-success');
+    demo_button.classList.remove('btn-danger');
+    is_running = false;
+  }else{
+    window.addEventListener("devicemotion", handleMotion);
+    window.addEventListener("deviceorientation", handleOrientation);
+    document.getElementById("start_demo").innerHTML = "";
+    demo_button.classList.remove('btn-success');
+    is_running = true;
+  }
+};
+
+
+
+/*
+Light and proximity are not supported anymore by mainstream browsers.
+window.addEventListener('devicelight', function(e) {
+   document.getElementById("DeviceLight").innerHTML="AmbientLight current Value: "+e.value+" Max: "+e.max+" Min: "+e.min;
+});
+
+window.addEventListener('lightlevel', function(e) {
+   document.getElementById("Lightlevel").innerHTML="Light level: "+e.value;
+});
+
+window.addEventListener('deviceproximity', function(e) {
+   document.getElementById("DeviceProximity").innerHTML="DeviceProximity current Value: "+e.value+" Max: "+e.max+" Min: "+e.min;
+});
+
+window.addEventListener('userproximity', function(event) {
+   document.getElementById("UserProximity").innerHTML="UserProximity: "+event.near;
+});
+*/
+
+</script>
+
+
+
+<script>
+          const data = [0];
+
+
+function func2() {
+    silval = document.getElementById('AirTime_last').innerHTML;
+        data.push(silval);
+  const list = document.getElementById("myList");
+  if (list.hasChildNodes()) {
+    list.removeChild(list.children[0]);
+        list.removeChild(list.children[0]);
+            list.removeChild(list.children[0]);
+  
+          }
+
+
+    data.sort((x, y) => y - x);
+
+   data2=data.slice(0, 3);
+
+        data2.forEach((item) => {
+            const li = document.createElement("li");
+            li.innerText = item;
+            list.appendChild(li); 
+        });
+
+}
+</script>
 </body>
-
 </html>
