@@ -41,8 +41,9 @@ p {
 
 body {
   padding-top:1%;
-    background-color: #000000;
-
+   background-image: url("images/1467061.png");
+      background-repeat: no-repeat;
+      background-size: cover;
 }
  .content{
     background-color: #0D1117;
