@@ -88,6 +88,11 @@ function updateFieldIfNotNull(fieldName, value, precision=10){
     document.getElementById(fieldName).innerHTML = value.toFixed(precision);
 }
 
+let inAir = false;
+let airStartTime = null;
+let lastAirTime = 0;
+let maxAirTime = 0;
+
   function handleMotion(event) {
   updateFieldIfNotNull('Accelerometer_gx', event.accelerationIncludingGravity.x);
   updateFieldIfNotNull('Accelerometer_gy', event.accelerationIncludingGravity.y);
