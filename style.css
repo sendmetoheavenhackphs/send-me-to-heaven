@@ -8,7 +8,7 @@ Gray:  #F2F2F2
 Green: #7CDE7C
 
 */
-
+*{   font: Helvetica, Arial, sans-serif;}
 title {
   color: #FFFFFF;
   letter-spacing: 7px;
