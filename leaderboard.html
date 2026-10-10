@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>leaderboard</title>
+</head>
+
+<body>
+    <ul id="myList"></ul>
+<button onclick="myFunction()">list</button>
+  <input type="text" id="lname" name="lname"><br><br>
+  <button onclick="func2()">add to leaderboard</button>
+
+    <script>
+
+        const data = [0];
+        
+    </script>
+
+<script>
+function myFunction() {
+data.sort((x, y) => y - x);
+
+   data2=data.slice(0, 3);
+        const list = document.getElementById("myList");
+
+        data2.forEach((item) => {
+            const li = document.createElement("li");
+            li.innerText = item;
+            list.appendChild(li);
+
+            
+        });
+}
+</script>
+<script>
+function func2() {
+    sily=document.getElementById("lname");
+    silval = sily.value;
+        data.push(silval);
+  const list = document.getElementById("myList");
+  if (list.hasChildNodes()) {
+    list.removeChild(list.children[0]);
+        list.removeChild(list.children[0]);
+            list.removeChild(list.children[0]);
+  }
+
+}
+</script>
+</body>
+
+</html>
