@@ -23,6 +23,9 @@
 <div class="p-3 mb-2 bg-secondary" id="demo-div">
 <a id="start_demo" class="btn btn-lg btn-success py-1" href="#" role="button">Start</a>
 <h3 style="margin-top:1rem;">Num. of datapoints: <span class="badge badge-warning" id="num-observed-events">0</span></h3>
+    <ul id="myList"></ul>
+<button onclick="myFunction()">list</button>
+  <button onclick="func2()">add to leaderboard</button>
 
 
   <ul>
@@ -126,6 +129,7 @@ let maxAirTime = 0;
       let duration = (now - airStartTime) / 1000; // Convert ms to seconds
       if (duration > 0.05 && duration < 3.0) {
         lastAirTime = duration;
+        func2();
         if (duration > maxAirTime) {
           maxAirTime = duration;
         }
@@ -198,6 +202,39 @@ window.addEventListener('userproximity', function(event) {
 });
 */
 
+</script>
+
+
+<script>
+          const data = [0];
+
+function myFunction() {
+data.sort((x, y) => y - x);
+
+   data2=data.slice(0, 3);
+        const list = document.getElementById("myList");
+
+        data2.forEach((item) => {
+            const li = document.createElement("li");
+            li.innerText = item;
+            list.appendChild(li);
+
+            
+        });
+}
+</script>
+<script>
+function func2() {
+    silval = document.getElementById('AirTime_last').innerHTML;
+        data.push(silval);
+  const list = document.getElementById("myList");
+  if (list.hasChildNodes()) {
+    list.removeChild(list.children[0]);
+        list.removeChild(list.children[0]);
+            list.removeChild(list.children[0]);
+  }
+
+}
 </script>
 </body>
 </html>
