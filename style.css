@@ -52,6 +52,8 @@ body {
    background-image: url("images/1467061.png");
       background-repeat: no-repeat;
       background-size: cover;
+          background-color: #000000;
+
 }
  .content{
     background-color: #0D1117;
