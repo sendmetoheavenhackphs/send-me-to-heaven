@@ -77,7 +77,7 @@
   <h4>Leaderboard:</h4>
 
   <p>Last: <span id="AirHeight_current">0.00</span><span> meters</span></h3></p>
-  <h3>Max: <span id="AirHeight_max">0.00</span><span> meters</span></h3>
+  <h3>Max: <span id="AirTime_max">0.00</span><span> meters</span></h3>
 </ul>
 
     <ul id="myList"></ul>
@@ -175,7 +175,7 @@ let maxAirTime = 0;
       document.getElementById('AirTime_current').innerHTML = currentDuration.toFixed(2);
 
       let currenthight = (0.125 * 9.81 * (currentDuration * currentDuration));
-        document.getElementById('AirHeight_current').innerHTML = currenthight.toFixed
+        document.getElementById('AirHeight_current').innerHTML = currenthight.toFixed(2)
     } else {
       document.getElementById('AirTime_current').innerHTML = "0.00";
     }
