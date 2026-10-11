@@ -29,8 +29,6 @@
 <main role="main" class="container">
 
 <div class="p-3 mb-2 " id="demo-div">
-    <a href="timetofly.html" class="btn btn-success"> numbers version </a>
-
   <a href="index.html" class="btn btn-success"> Home Page </a>
 
 <h3 style="margin-top:1rem;">Num. of datapoints: <span class="badge badge-warning" id="num-observed-events">0</span></h3>
@@ -62,12 +60,17 @@
 <br>
 
 
+
 <ul>
   <p>Status: <span id="AirTime_status">Waiting...</span></h3>
   Current: <span id="AirTime_current">0.00</span><span> s</span></h3></p>
 
     <img src="images/nameitsmthidk.png" alt="" style="width:90%;">
 
+<h4 style="margin-top:0.75rem;">Height</h4>
+<ul>
+  <li>style="margin-top:0.75rem;">Height: <span id="AirHeight_current">0.00</span><span> meters</span></li>
+</ul>
 
   <h4>Leaderboard:</h4>
 
@@ -154,6 +157,11 @@ let maxAirTime = 0;
         if (duration > maxAirTime) {
           maxAirTime = duration;
         }
+
+        let gravity = 9.81; 
+        let heightmeters = (0.125 * gravity * (duration * duration));
+
+        document.getElementById('AirHeight_current').innerHTML = heightmeters.toFixed(2);
         document.getElementById('AirTime_last').innerHTML = lastAirTime.toFixed(2);
         document.getElementById('AirTime_max').innerHTML = maxAirTime.toFixed(2);
       }
@@ -163,10 +171,15 @@ let maxAirTime = 0;
     if (inAir) {
       let currentDuration = (now - airStartTime) / 1000;
       document.getElementById('AirTime_current').innerHTML = currentDuration.toFixed(2);
+
+      let currenthight = (0.125 * 9.81 * (currentDuration * currentDuration));
+        document.getElementById('AirHeight_current').innerHTML = currenthight.toFixed
     } else {
       document.getElementById('AirTime_current').innerHTML = "0.00";
     }
   }
+
+  
   // -------------------------------------------
 
   incrementEventCount();
